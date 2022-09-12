@@ -33,7 +33,7 @@ def main():
     verbose = args.verbose
 
     rss = RssReader(rss_source, limit, json, verbose)
-    rss.read_news()
+    rss.print_rss()
 
 
 if __name__ == "__main__":
