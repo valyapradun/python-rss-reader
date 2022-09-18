@@ -1,39 +1,26 @@
-import argparse
 from src.rss_class import RssReader
+from src.utils import parse_argument
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Pure Python command-line RSS reader.")
+    """
+    Main method for rss_reader.
 
-    parser.add_argument("source",
-                        help="RSS URL",
-                        type=str)
-
-    parser.add_argument("--version",
-                        action="version",
-                        version="Version 1.1",
-                        help="Print version info")
-
-    parser.add_argument("--json",
-                        help="Print result as JSON in stdout",
-                        action="store_true")
-
-    parser.add_argument("--verbose",
-                        help="Outputs verbose status messages",
-                        action="store_true")
-
-    parser.add_argument("--limit",
-                        help="Limit news topics if this parameter provided",
-                        type=int)
-
-    args = parser.parse_args()
-    rss_source = args.source
-    limit = args.limit
-    json = args.json
-    verbose = args.verbose
+    Procedure:
+    - getting command line arguments
+    - creating an object of class RssReader
+    - checking 'limit' parameter
+    - parsing of rss
+    - displaying the result on the screen
+    """
+    args = parse_argument()
+    (rss_source, limit, json, verbose) = (args.source, args.limit, args.json, args.verbose)
 
     rss = RssReader(rss_source, limit, json, verbose)
-    rss.print_rss()
+    rss.check_limit()
+    rss_json = rss.parse_rss()
+    if rss_json is not None:
+        rss.print_rss(rss_json)
 
 
 if __name__ == "__main__":
