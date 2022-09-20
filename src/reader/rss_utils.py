@@ -17,7 +17,7 @@ def parse_argument():
 
     parser.add_argument("--version",
                         action="version",
-                        version="Version 1.1",
+                        version="Version 1.2",
                         help="Print version info")
 
     parser.add_argument("--json",
