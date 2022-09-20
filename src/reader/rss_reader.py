@@ -1,5 +1,5 @@
-from src.rss_class import RssReader
-from src.utils import parse_argument
+from reader.rss_utils import parse_argument
+from reader.rss_entities import RssReader
 
 
 def main():
@@ -25,3 +25,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -1,6 +1,6 @@
 import feedparser
 import unicodedata
-import src.utils as utils
+from reader.rss_utils import get_logger, log_decorator, exceptions_suppressing_decorator
 
 
 class RssReader:
@@ -45,9 +45,9 @@ class RssReader:
             self.limit = self.number_news
         else:
             self.limit = limit
-        self.logger_obj = utils.get_logger(self.verbose)
+        self.logger_obj = get_logger(self.verbose)
 
-    @utils.log_decorator()
+    @log_decorator()
     def check_limit(self) -> int:
         """
         Checking the entered parameter '--limit' and feed size.
@@ -58,8 +58,8 @@ class RssReader:
             self.limit = self.number_news
         return self.limit
 
-    @utils.exceptions_suppressing_decorator
-    @utils.log_decorator
+    @exceptions_suppressing_decorator
+    @log_decorator
     def parse_rss(self) -> dict:
         """
         Parse rss and return a dictionary with its contents
@@ -96,8 +96,8 @@ class RssReader:
 
         return rss_json
 
-    @utils.exceptions_suppressing_decorator
-    @utils.log_decorator
+    @exceptions_suppressing_decorator
+    @log_decorator
     def print_rss(self, rss_json):
         """
         Print output to console in human readable format or as json

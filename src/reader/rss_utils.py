@@ -1,7 +1,7 @@
 import logging
 import argparse
 import functools
-import src.rss_exeption as rss_exeption
+from reader.rss_exeptions import RssReaderException
 
 
 def parse_argument():
@@ -78,7 +78,7 @@ def log_decorator(_func=None):
             except Exception as exc:
                 logger_obj.error(f"Exception: {exc.__str__()}")
                 print("Something went wrong...")
-                raise rss_exeption.RssReaderException(exc.__str__())
+                raise RssReaderException(exc.__str__())
         return log_decorator_wrapper
 
     if _func is None:
@@ -98,7 +98,7 @@ def exceptions_suppressing_decorator(func):
         try:
             result = func(*args, **kwargs)
             return result
-        except rss_exeption.RssReaderException as exc:
+        except RssReaderException as exc:
             print("Please, check the rss link and start over. \n"
                   "The following exception was suppressed: " + exc.__str__())
             return None
