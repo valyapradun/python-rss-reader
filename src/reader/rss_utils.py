@@ -1,5 +1,6 @@
 import logging
 import argparse
+import sys
 import functools
 from reader.rss_exeptions import RssReaderException
 
@@ -11,13 +12,20 @@ def parse_argument():
     """
     parser = argparse.ArgumentParser(description="Pure Python command-line RSS reader.")
 
+    parser.add_argument("--date",
+                        help="News published date from cashes if this parameter provided",
+                        type=int)
+
+    nargs_source_value = "?" if ("--date" in sys.argv) else 1
+
     parser.add_argument("source",
                         help="RSS URL",
-                        type=str)
+                        type=str,
+                        nargs=nargs_source_value)
 
     parser.add_argument("--version",
                         action="version",
-                        version="Version 1.2",
+                        version="Version 1.3",
                         help="Print version info")
 
     parser.add_argument("--json",

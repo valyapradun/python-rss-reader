@@ -1,5 +1,8 @@
 import feedparser
 import unicodedata
+import dateutil.parser as parser
+import json
+from os import path
 from reader.rss_utils import get_logger, log_decorator, exceptions_suppressing_decorator
 
 
@@ -65,24 +68,26 @@ class RssReader:
         Parse rss and return a dictionary with its contents
         :return: dictionary with rss contents
         """
-        rss_json = {"feed": unicodedata.normalize("NFKC", self.news_feed.feed.title)}
+        rss_json = {}
         entries = []
 
         for entry in self.news_feed.entries[0:self.limit]:
             keys_entry = entry.keys()
-            entry_json = {}
+            entry_json = {"rss_source": self.rss_source, "feed": unicodedata.normalize("NFKC", self.news_feed.feed.title)}
 
             if "title" in keys_entry:
-                entry_json["title"] = unicodedata.normalize("NFKC", entry.title)
+                entry_json["title"] = entry.title
 
             if "published" in keys_entry:
-                entry_json["date"] = entry.published
+                entry_json["date"] = str(parser.parse(entry.published))
 
             if "link" in keys_entry:
-                entry_json["link"] = unicodedata.normalize("NFKC", entry.link)
+                # entry_json["link"] = unicodedata.normalize("NFKC", entry.link)
+                entry_json["link"] = entry.link
 
             if "summary" in keys_entry:
-                entry_json["summary"] = unicodedata.normalize("NFKC", entry.summary)
+                # entry_json["summary"] = unicodedata.normalize("NFKC", entry.summary)
+                entry_json["summary"] = entry.summary
 
             links = []
             if "links" in keys_entry:
@@ -106,7 +111,6 @@ class RssReader:
         if self.json:
             print(rss_json)
         else:
-            print(f"\nFeed: {rss_json['feed']}")
             for entry in rss_json['entries']:
                 print('\n----------------------\n')
                 links_attribute = "links"
@@ -117,3 +121,22 @@ class RssReader:
                     print("\nLinks:")
                     for link in entry["links"]:
                         print(f"[{entry['links'].index(link) + 1}]: {link['href']} ({link['type']})")
+
+    @exceptions_suppressing_decorator
+    @log_decorator
+    def write_json(self, rss_json):
+        """
+        Write rss-news in json file
+        :param rss_json: dictionary with rss contents
+        """
+        filename = "data/news.json"
+        if path.isfile(filename) is False:
+            file_data = {"data": [rss_json]}
+            with open(filename, "w", encoding="utf-8") as outfile:
+                json.dump(file_data, outfile, ensure_ascii=False)
+        else:
+            with open(filename, "r+", encoding="utf-8") as outfile:
+                file_data = json.load(outfile)
+                file_data["data"].append(rss_json)
+                outfile.seek(0)
+                json.dump(file_data, outfile, ensure_ascii=False)
