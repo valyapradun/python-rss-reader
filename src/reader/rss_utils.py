@@ -1,8 +1,15 @@
 import logging
 import argparse
-import sys
 import functools
+import sys
+import os
+
 from reader.rss_exeptions import RssReaderException
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+__JSON_FILE__ = "data/news.json"
 
 
 def parse_argument():
@@ -71,6 +78,7 @@ def log_decorator(_func=None):
     :param _func: specific method
     :return: log_decorator_wrapper
     """
+
     def log_decorator_info(func):
         @functools.wraps(func)
         def log_decorator_wrapper(self, *args, **kwargs):
@@ -87,6 +95,7 @@ def log_decorator(_func=None):
                 logger_obj.error(f"Exception: {exc.__str__()}")
                 print("Something went wrong...")
                 raise RssReaderException(exc.__str__())
+
         return log_decorator_wrapper
 
     if _func is None:
@@ -101,6 +110,7 @@ def exceptions_suppressing_decorator(func):
     :param func: specific method
     :return: wrapper
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:

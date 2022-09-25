@@ -1,9 +1,16 @@
 import feedparser
 import unicodedata
 import dateutil.parser as parser
+import pandas as pd
 import json
 from os import path
+import sys
 from reader.rss_utils import get_logger, log_decorator, exceptions_suppressing_decorator
+
+SCRIPT_DIR = path.dirname(path.abspath(__file__))
+sys.path.append(path.dirname(SCRIPT_DIR))
+
+__JSON_FILE__ = "data/news.json"
 
 
 class RssReader:
@@ -31,7 +38,7 @@ class RssReader:
             Print output to console in human readable format or as json
         """
 
-    def __init__(self, rss_source, limit=None, json=True, verbose=True):
+    def __init__(self, rss_source, limit=None, json=True, verbose=True, date=None):
         """
         The initialization method for the RssReader instance.
         :param str rss_source: RSS URL
@@ -40,15 +47,18 @@ class RssReader:
         :param verbose: Outputs verbose status messages
         """
         self.rss_source = rss_source
+        self.limit = limit
+        if rss_source is not None:
+            self.news_feed = feedparser.parse(rss_source)
+            self.number_news = len(self.news_feed.entries)
+            if limit is None:
+                self.limit = self.number_news
+            else:
+                self.limit = limit
         self.verbose = verbose
         self.json = json
-        self.news_feed = feedparser.parse(rss_source)
-        self.number_news = len(self.news_feed.entries)
-        if limit is None:
-            self.limit = self.number_news
-        else:
-            self.limit = limit
         self.logger_obj = get_logger(self.verbose)
+        self.date = date
 
     @log_decorator()
     def check_limit(self) -> int:
@@ -73,7 +83,8 @@ class RssReader:
 
         for entry in self.news_feed.entries[0:self.limit]:
             keys_entry = entry.keys()
-            entry_json = {"rss_source": self.rss_source, "feed": unicodedata.normalize("NFKC", self.news_feed.feed.title)}
+            entry_json = {"rss_source": self.rss_source,
+                          "feed": unicodedata.normalize("NFKC", self.news_feed.feed.title)}
 
             if "title" in keys_entry:
                 entry_json["title"] = entry.title
@@ -129,7 +140,7 @@ class RssReader:
         Write rss-news in json file
         :param rss_json: dictionary with rss contents
         """
-        filename = "data/news.json"
+        filename = __JSON_FILE__
         if path.isfile(filename) is False:
             file_data = {"data": [rss_json]}
             with open(filename, "w", encoding="utf-8") as outfile:
@@ -140,3 +151,36 @@ class RssReader:
                 file_data["data"].append(rss_json)
                 outfile.seek(0)
                 json.dump(file_data, outfile, ensure_ascii=False)
+
+    @exceptions_suppressing_decorator
+    @log_decorator
+    def read_cashed_news(self):
+        """
+        Read json file and filter records by date and source
+        """
+        df = pd.read_json(__JSON_FILE__, orient="split")
+
+        exploded_df = df.explode("entries").drop_duplicates()
+        exploded_df = pd.DataFrame(exploded_df['entries'].tolist())
+        exploded_df['formatted_date'] = exploded_df['date'].str.slice(0, 10).str.replace("-", "")
+
+        filtered_by_date_df = exploded_df[exploded_df['formatted_date'] == str(self.date)]
+        filtered_by_date_df = filtered_by_date_df.drop(columns=["formatted_date"])
+
+        if self.rss_source is None:
+            entries = filtered_by_date_df.to_dict('records')
+
+            if self.limit is None:
+                self.limit = len(entries)
+
+            if self.limit <= len(entries):
+                return entries[:self.limit]
+            else:
+                return entries
+        else:
+            filtered_by_source_df = filtered_by_date_df[filtered_by_date_df['rss_source'] == self.rss_source]
+            entries = filtered_by_source_df.to_dict('records')
+            if (self.limit is not None) & (self.limit <= len(entries)):
+                return entries[:self.limit]
+            else:
+                return entries
