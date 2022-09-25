@@ -3,8 +3,9 @@ import argparse
 import functools
 import sys
 import os
+from os import path
 
-from reader.rss_exeptions import RssReaderException
+from reader.rss_exeptions import RssReaderException, RssReaderHtmlException
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -46,6 +47,10 @@ def parse_argument():
     parser.add_argument("--limit",
                         help="Limit news topics if this parameter provided",
                         type=int)
+
+    parser.add_argument("--to-html",
+                        help="Pass to output html file",
+                        type=str)
 
     return parser.parse_args()
 
@@ -117,8 +122,47 @@ def exceptions_suppressing_decorator(func):
             result = func(*args, **kwargs)
             return result
         except RssReaderException as exc:
-            print("Please, check the rss link and start over. \n"
+            print("Please, check the entered parameters and start over. \n"
+                  "The following exception was suppressed: " + exc.__str__())
+            return None
+        except RssReaderHtmlException as exc:
+            print("Please, check the entered path to html and start over. \n"
                   "The following exception was suppressed: " + exc.__str__())
             return None
 
     return wrapper
+
+@exceptions_suppressing_decorator
+def pass_to_html(html_path, rss_json):
+    try:
+        with open(html_path, "w", encoding="utf-8") as outfile:
+            html_template = """<html>
+          <head>
+          <title>RSS-reader</title>
+          <meta charset="utf-8">
+          </head>
+          <body>
+          """
+
+            for entry in rss_json['entries']:
+                keys_entry = entry.keys()
+                html_template += f"<h1>{entry['feed']}</h1>"
+                html_template += f"<h2>{entry['title']}</h2>"
+                html_template += f"<p>{entry['date']}</p>"
+                for link in entry['links']:
+                    if link['type'] == 'image/jpeg':
+                        html_template += f"<img src='{link['href']}'/>"
+
+                if "summary" in keys_entry:
+                    html_template += f"<p>{entry['summary']}</p>"
+                html_template += f"<a href='{entry['link']}'>More details ...</a>"
+
+            html_template += """
+          </body>
+          </html>
+          """
+            outfile.write(html_template)
+    except Exception as exc:
+        print(f"\nError: Unable to write html-file.")
+        raise RssReaderHtmlException(exc.__str__())
+

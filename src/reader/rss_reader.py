@@ -4,7 +4,7 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from reader.rss_utils import parse_argument
+from reader.rss_utils import parse_argument, pass_to_html
 from reader.rss_entities import RssReader
 
 
@@ -20,10 +20,16 @@ def main():
     - displaying the result on the screen
     """
     args = parse_argument()
-    (rss_source, limit, json, verbose, date) = (args.source, args.limit, args.json, args.verbose, args.date)
-
+    rss_source = args.source
     if isinstance(rss_source, list):
         rss_source = rss_source[0]
+    limit = args.limit
+    json = args.json
+    verbose = args.verbose
+    date = args.date
+    html_path = args.to_html
+
+    rss_json = {}
 
     if date is None:
         rss = RssReader(rss_source, limit, json, verbose, date)
@@ -40,6 +46,9 @@ def main():
             rss.print_rss(rss_json)
         else:
             print(f"Error: no news for specified source ({rss_source}) or date ({date}).")
+
+    if html_path is not None:
+        pass_to_html(html_path, rss_json)
 
 
 if __name__ == "__main__":
