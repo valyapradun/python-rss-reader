@@ -3,9 +3,9 @@ import argparse
 import functools
 import sys
 import os
-from os import path
+from fpdf import FPDF
 
-from reader.rss_exeptions import RssReaderException, RssReaderHtmlException
+from reader.rss_exeptions import RssReaderException, RssReaderHtmlException, RssReaderPdfException
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -33,7 +33,7 @@ def parse_argument():
 
     parser.add_argument("--version",
                         action="version",
-                        version="Version 1.3",
+                        version="Version 1.4",
                         help="Print version info")
 
     parser.add_argument("--json",
@@ -50,6 +50,10 @@ def parse_argument():
 
     parser.add_argument("--to-html",
                         help="Pass to output html file",
+                        type=str)
+
+    parser.add_argument("--to-pdf",
+                        help="Pass to output pdf file",
                         type=str)
 
     return parser.parse_args()
@@ -129,8 +133,12 @@ def exceptions_suppressing_decorator(func):
             print("Please, check the entered path to html and start over. \n"
                   "The following exception was suppressed: " + exc.__str__())
             return None
-
+        except RssReaderPdfException as exc:
+            print("Please, check the entered path to pdf and start over. \n"
+                  "The following exception was suppressed: " + exc.__str__())
+            return None
     return wrapper
+
 
 @exceptions_suppressing_decorator
 def pass_to_html(html_path, rss_json):
@@ -165,4 +173,28 @@ def pass_to_html(html_path, rss_json):
     except Exception as exc:
         print(f"\nError: Unable to write html-file.")
         raise RssReaderHtmlException(exc.__str__())
+
+
+@exceptions_suppressing_decorator
+def pass_to_pdf(pdf_path, rss_json):
+    try:
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.add_font('DejaVu', fname='data/DejaVuSerif-Bold.ttf')
+        pdf.set_font('DejaVu', size=14)
+
+        for entry in rss_json['entries']:
+            keys_entry = entry.keys()
+            pdf.write(txt=f"\n\nFeed: {entry['feed']}")
+            pdf.write(txt=f"\n\nTitle: {entry['title']}")
+            pdf.write(txt=f"\n\nDate: {entry['date']}")
+            if "summary" in keys_entry:
+                pdf.write(txt=f"\n\nSummary: {entry['summary']}")
+            pdf.write(txt=f"\n\n")
+            pdf.cell(txt="See more details ...", border=1, align="C", link=f"{entry['link']}")
+            pdf.write(txt=f"\n\n\n--------------------------")
+        pdf.output(pdf_path)
+    except Exception as exc:
+        print(f"\nError: Unable to write pdf-file.")
+        raise RssReaderPdfException(exc.__str__())
 

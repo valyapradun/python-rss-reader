@@ -10,3 +10,9 @@ class RssReaderHtmlException(Exception):
     A class to represent RssReaderHtmlException object.
     """
     pass
+
+class RssReaderPdfException(Exception):
+    """
+    A class to represent RssReaderHtmlException object.
+    """
+    pass

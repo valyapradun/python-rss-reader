@@ -4,7 +4,7 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from reader.rss_utils import parse_argument, pass_to_html
+from reader.rss_utils import parse_argument, pass_to_html, pass_to_pdf
 from reader.rss_entities import RssReader
 
 
@@ -28,6 +28,7 @@ def main():
     verbose = args.verbose
     date = args.date
     html_path = args.to_html
+    pdf_path = args.to_pdf
 
     rss_json = {}
 
@@ -49,6 +50,11 @@ def main():
 
     if html_path is not None:
         pass_to_html(html_path, rss_json)
+
+    if pdf_path is not None:
+        #print("asfdasfdas")
+        pass_to_pdf(pdf_path, rss_json)
+
 
 
 if __name__ == "__main__":
