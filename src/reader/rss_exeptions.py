@@ -5,11 +5,19 @@ class RssReaderException(Exception):
     pass
 
 
+class RssReaderCacheException(Exception):
+    """
+    A class to represent RssReaderCache object.
+    """
+    pass
+
+
 class RssReaderHtmlException(Exception):
     """
     A class to represent RssReaderHtmlException object.
     """
     pass
+
 
 class RssReaderPdfException(Exception):
     """

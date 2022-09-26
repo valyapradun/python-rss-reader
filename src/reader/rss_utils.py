@@ -5,7 +5,7 @@ import sys
 import os
 from fpdf import FPDF
 
-from reader.rss_exeptions import RssReaderException, RssReaderHtmlException, RssReaderPdfException
+from reader.rss_exeptions import RssReaderException, RssReaderHtmlException, RssReaderPdfException, RssReaderCacheException
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -80,6 +80,36 @@ def get_logger(verbose: bool = True) -> logging.Logger:
     return logger
 
 
+def exceptions_suppressing_decorator(func):
+    """
+    This is a decorator that suppresses errors if they occur during the method
+    :param func: specific method
+    :return: wrapper
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            return result
+        except RssReaderException as exc:
+            print("Please, check the entered parameters and start over. \n"
+                  "The following exception was suppressed: " + exc.__str__())
+            return None
+        except RssReaderCacheException as exc:
+            print("Please, check the file existence and start over. \n"
+                  "The following exception was suppressed: " + exc.__str__())
+            return None
+        except RssReaderHtmlException as exc:
+            print("Please, check the entered path to html and start over. \n"
+                  "The following exception was suppressed: " + exc.__str__())
+            return None
+        except RssReaderPdfException as exc:
+            print("Please, check the entered path to pdf and start over. \n"
+                  "The following exception was suppressed: " + exc.__str__())
+            return None
+    return wrapper
+
+
 def log_decorator(_func=None):
     """
     It is a log decorator for outputting to the log information about begin and end of the method,
@@ -87,7 +117,6 @@ def log_decorator(_func=None):
     :param _func: specific method
     :return: log_decorator_wrapper
     """
-
     def log_decorator_info(func):
         @functools.wraps(func)
         def log_decorator_wrapper(self, *args, **kwargs):
@@ -95,10 +124,10 @@ def log_decorator(_func=None):
             args_passed_in_function = [repr(a) for a in args]
             kwargs_passed_in_function = [f"{k}={v!r}" for k, v in kwargs.items()]
             formatted_arguments = ", ".join(args_passed_in_function + kwargs_passed_in_function)
-            logger_obj.info(f"Begin function {func.__name__}() - Arguments: {formatted_arguments}")
+            logger_obj.info(f"Begin function {func.__name__}() - Arguments: {str(formatted_arguments).encode('cp850', errors='replace')}")
             try:
                 result = func(self, *args, **kwargs)
-                logger_obj.info(f"End function {func.__name__}() - Returned: {result!r}")
+                logger_obj.info(f"End function {func.__name__}() - Returned: {str(result).encode('cp850', errors='replace')!r}")
                 return result
             except Exception as exc:
                 logger_obj.error(f"Exception: {exc.__str__()}")
@@ -113,35 +142,13 @@ def log_decorator(_func=None):
         return log_decorator_info(_func)
 
 
-def exceptions_suppressing_decorator(func):
-    """
-    This is a decorator that suppresses errors if they occur during the method
-    :param func: specific method
-    :return: wrapper
-    """
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            result = func(*args, **kwargs)
-            return result
-        except RssReaderException as exc:
-            print("Please, check the entered parameters and start over. \n"
-                  "The following exception was suppressed: " + exc.__str__())
-            return None
-        except RssReaderHtmlException as exc:
-            print("Please, check the entered path to html and start over. \n"
-                  "The following exception was suppressed: " + exc.__str__())
-            return None
-        except RssReaderPdfException as exc:
-            print("Please, check the entered path to pdf and start over. \n"
-                  "The following exception was suppressed: " + exc.__str__())
-            return None
-    return wrapper
-
-
 @exceptions_suppressing_decorator
 def pass_to_html(html_path, rss_json):
+    """
+    Convert rss-news to html file
+    :param html_path: path to html file
+    :param rss_json: data with rss news in json format
+    """
     try:
         with open(html_path, "w", encoding="utf-8") as outfile:
             html_template = """<html>
@@ -177,6 +184,11 @@ def pass_to_html(html_path, rss_json):
 
 @exceptions_suppressing_decorator
 def pass_to_pdf(pdf_path, rss_json):
+    """
+    Convert rss-news to pdf file
+    :param pdf_path: path to html file
+    :param rss_json: data with rss news in json format
+    """
     try:
         pdf = FPDF()
         pdf.add_page()

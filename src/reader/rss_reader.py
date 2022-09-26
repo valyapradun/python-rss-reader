@@ -14,10 +14,20 @@ def main():
 
     Procedure:
     - getting command line arguments
-    - creating an object of class RssReader
-    - checking 'limit' parameter
-    - parsing of rss
-    - displaying the result on the screen
+    - if date argument is None (means without reading cached news):
+          -- creating an object of class RssReader
+          -- checking 'limit' parameter
+          -- parsing of rss
+          -- caching news to local file
+          -- displaying the result on the screen
+    - if date argument is not None (means with reading cached news):
+          -- creating an object of class RssReader
+          -- reading cached news
+          -- displaying the result on the screen
+    - if html_path argument is not None:
+          -- writing news to html file
+    - if pdf_path argument is not None:
+          -- writing news to pdf file
     """
     args = parse_argument()
     rss_source = args.source
@@ -42,7 +52,10 @@ def main():
     else:
         rss = RssReader(rss_source, limit, json, verbose, date)
         entries = rss.read_cashed_news()
-        if len(entries) != 0:
+
+        if entries is None:
+            print(f"Error: no news for specified source ({rss_source}) or date ({date}).")
+        elif len(entries) != 0:
             rss_json = {"entries": entries}
             rss.print_rss(rss_json)
         else:
@@ -52,9 +65,7 @@ def main():
         pass_to_html(html_path, rss_json)
 
     if pdf_path is not None:
-        #print("asfdasfdas")
         pass_to_pdf(pdf_path, rss_json)
-
 
 
 if __name__ == "__main__":
