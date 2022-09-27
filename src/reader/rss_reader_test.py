@@ -47,8 +47,8 @@ class TestRssReader(unittest.TestCase):
         Checking the correctness of the method read_cashed_news
         """
         rss = RssReader(None, 2, False, False, 20220927)
-        rss.cache_path = "data/news.json"
-        self.assertNotEqual(RssReader.read_cashed_news(rss), [])
+        rss.cache_path = "data/test_cache.json"
+        self.assertEqual(RssReader.read_cashed_news(rss), [])
 
     def test_check_date_incorrect_value(self):
         """
@@ -69,7 +69,7 @@ class TestRssReader(unittest.TestCase):
         """
         Checking existing html file after running pass_to_html method
         """
-        html_path = 'test/data/test.html'
+        html_path = 'data/test.html'
         pass_to_html(html_path, rss_json)
         self.assertEqual(path.isfile(html_path), True)
 
@@ -77,7 +77,7 @@ class TestRssReader(unittest.TestCase):
         """
         Checking existing pdf file after running pass_to_pdf method
         """
-        pdf_path = 'test/data/test.pdf'
+        pdf_path = 'data/test.pdf'
         pass_to_pdf(pdf_path, rss_json)
         self.assertEqual(path.isfile(pdf_path), True)
 
