@@ -137,7 +137,7 @@ Version 1.4
  of the project. If this option is specified, program prints all logs in stdout _in the process_ of application running. 
  For instance:
 ```
-> rss_reader "http://rss.garant.ru/categories/news" --limit 1 --json --verbose
+> rss_reader "https://news.yahoo.com/rss/" --limit 1 --json --verbose
 
 2022-09-20 21:26:29,765 - INFO - get_logger - The rss-reading starts working
 2022-09-20 21:26:29,765 - INFO - log_decorator_wrapper - Begin function check_limit() - Arguments:
