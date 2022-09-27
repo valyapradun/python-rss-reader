@@ -51,6 +51,7 @@ def main():
             rss.print_rss(rss_json)
     else:
         rss = RssReader(rss_source, limit, json, verbose, date)
+        rss.check_date()
         entries = rss.read_cashed_news()
 
         if entries is None:

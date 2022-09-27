@@ -5,6 +5,7 @@ import pandas as pd
 import json
 from os import path
 import sys
+from datetime import date
 from reader.rss_utils import get_logger, log_decorator, exceptions_suppressing_decorator
 from reader.rss_exeptions import RssReaderCacheException
 
@@ -67,6 +68,7 @@ class RssReader:
         self.json = json
         self.logger_obj = get_logger(self.verbose)
         self.date = date
+        self.cache_path = __JSON_FILE__
 
     @log_decorator()
     def check_limit(self) -> int:
@@ -78,6 +80,18 @@ class RssReader:
         if self.limit > self.number_news:
             self.limit = self.number_news
         return self.limit
+
+    @log_decorator()
+    def check_date(self) -> int:
+        """
+        Checking the entered parameter '--date'.
+        If `--date` is larger than current date then to use current date.
+        :return: self.limit
+        """
+        today = int(str(date.today()).replace('-', ''))
+        if self.date > int(str(date.today()).replace('-', '')):
+            self.date = today
+        return self.date
 
     @exceptions_suppressing_decorator
     @log_decorator
@@ -148,7 +162,7 @@ class RssReader:
         Write rss-news in json file
         :param rss_json: dictionary with rss contents
         """
-        filename = __JSON_FILE__
+        filename = self.cache_path
         if path.isfile(filename) is False:
             file_data = {"data": [rss_json]}
             with open(filename, "w", encoding="utf-8") as outfile:
@@ -166,7 +180,7 @@ class RssReader:
         """
         Read json file and filter records by date and source
         """
-        filename = __JSON_FILE__
+        filename = self.cache_path
         if path.isfile(filename) is False:
             raise RssReaderCacheException(f"\nThe cache does not exist. Please read some news first.")
         else:
